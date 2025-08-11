@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/thrive_space_logo.dart';
+import '../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onLogin;
@@ -23,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   
   bool _isPasswordVisible = false;
   bool _isLoading = false;
@@ -43,26 +45,45 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await _authService.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    // Mock validation - you can replace this with real authentication
-    if (_emailController.text.toLowerCase() == 'demo@thrivespace.com' &&
-        _passwordController.text == 'password123') {
-      widget.onLogin({
-        'email': _emailController.text,
-        'name': 'Demo User',
-        'avatar': '',
-      });
-    } else {
+      if (response.user != null) {
+        final userData = {
+          'id': response.user!.id,
+          'email': response.user!.email ?? '',
+          'name': response.user!.userMetadata?['full_name'] ?? 'User',
+          'avatar': response.user!.userMetadata?['avatar_url'] ?? '',
+        };
+        widget.onLogin(userData);
+      } else {
+        setState(() {
+          _errorMessage = 'Login failed. Please try again.';
+        });
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Invalid email or password. Try demo@thrivespace.com / password123';
+        _errorMessage = _getErrorMessage(e.toString());
       });
     }
 
     setState(() {
       _isLoading = false;
     });
+  }
+
+  String _getErrorMessage(String error) {
+    if (error.contains('Invalid login credentials')) {
+      return 'Invalid email or password. Please check your credentials.';
+    } else if (error.contains('Email not confirmed')) {
+      return 'Please check your email and confirm your account.';
+    } else if (error.contains('Too many requests')) {
+      return 'Too many login attempts. Please try again later.';
+    }
+    return 'An error occurred. Please try again.';
   }
 
   @override

@@ -12,6 +12,8 @@ dependencies:
     sdk: flutter
   provider: ^6.0.0
   cupertino_icons: ^1.0.8
+  supabase_flutter: ^2.5.6
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +25,7 @@ flutter:
 
   # Local Assets Configuration
   assets:
+    - .env
     # Profile Images
     - assets/images/profiles/
     - assets/images/profiles/profile_1.jpg
@@ -67,8 +70,3 @@ flutter:
     - assets/images/coaches/coach_anna.jpg
     - assets/images/coaches/coach_john.jpg
     
-    # Placeholders
-    - assets/placeholders/
-    
-    # Icons
-    - assets/icons/

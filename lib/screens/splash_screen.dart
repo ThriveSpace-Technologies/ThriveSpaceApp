@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/asset_manager.dart';
 import '../widgets/thrive_space_logo.dart';
 
 class SplashScreen extends StatefulWidget {

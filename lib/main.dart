@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'services/auth_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/journey_screen.dart';
@@ -14,7 +17,18 @@ import 'screens/onboarding/profile_setup_screen.dart';
 import 'screens/onboarding/goals_selection_screen.dart';
 import 'screens/onboarding/tutorial_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await dotenv.load(fileName: '.env');
+  
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+  
   runApp(const ThriveSpaceApp());
 }
 
@@ -65,23 +79,29 @@ class _AppWrapperState extends State<AppWrapper> {
   AppState _appState = AppState.loading;
   Map<String, dynamic> _userData = {};
   Map<String, dynamic> _onboardingData = {};
+  final _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
+    _listenToAuthChanges();
   }
 
   void _initializeApp() async {
     await Future.delayed(const Duration(seconds: 3)); // Splash duration
     
-    // Check if user is logged in and has completed onboarding
-    // In a real app, you'd check local storage/preferences
-    final bool isLoggedIn = false; // Mock check
-    final bool hasCompletedOnboarding = false; // Mock check
+    // Check if user is authenticated
+    final user = _authService.currentUser;
     
-    if (isLoggedIn && hasCompletedOnboarding) {
+    if (user != null && _authService.isEmailConfirmed) {
       setState(() {
+        _userData = {
+          'id': user.id,
+          'email': user.email ?? '',
+          'name': user.userMetadata?['full_name'] ?? 'User',
+          'avatar': user.userMetadata?['avatar_url'] ?? '',
+        };
         _appState = AppState.main;
       });
     } else {
@@ -89,6 +109,31 @@ class _AppWrapperState extends State<AppWrapper> {
         _appState = AppState.welcome;
       });
     }
+  }
+
+  void _listenToAuthChanges() {
+    _authService.authStateChanges.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn) {
+        final user = data.session?.user;
+        if (user != null) {
+          setState(() {
+            _userData = {
+              'id': user.id,
+              'email': user.email ?? '',
+              'name': user.userMetadata?['full_name'] ?? 'User',
+              'avatar': user.userMetadata?['avatar_url'] ?? '',
+            };
+          });
+        }
+      } else if (event == AuthChangeEvent.signedOut) {
+        setState(() {
+          _appState = AppState.welcome;
+          _userData = {};
+          _onboardingData = {};
+        });
+      }
+    });
   }
 
   void _handleLogin(Map<String, dynamic> userData) {

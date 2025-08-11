@@ -16,8 +16,8 @@ class ThriveSpaceLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = primaryColor ?? const Color(0xFF22c55e);
-    final secondary = secondaryColor ?? const Color(0xFF0891b2);
+    final primary = primaryColor ?? const Color(0xFF22c55e);  // Fresh green
+    final secondary = secondaryColor ?? const Color(0xFF10b981);  // Emerald  
     final bg = backgroundColor ?? Colors.white;
 
     return Container(
@@ -26,133 +26,89 @@ class ThriveSpaceLogo extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: primary,
-          width: size * 0.06,
-        ),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.2),
+            blurRadius: size * 0.1,
+            offset: Offset(0, size * 0.05),
+          ),
+        ],
       ),
       child: ClipOval(
-        child: Stack(
-          children: [
-            // Background
-            Container(
-              width: size,
-              height: size,
-              color: bg,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                Colors.white,
+                primary.withValues(alpha: 0.05),
+                secondary.withValues(alpha: 0.1),
+              ],
+              stops: const [0.0, 0.7, 1.0],
             ),
-            
-            // Central tree/person figure
-            Positioned(
-              bottom: size * 0.15,
-              left: size * 0.35,
-              right: size * 0.35,
-              child: Container(
-                height: size * 0.7,
+          ),
+          child: Stack(
+            children: [
+              // Main leaf shape
+              Positioned(
+                top: size * 0.15,
+                left: size * 0.3,
                 child: CustomPaint(
-                  painter: CentralFigurePainter(
-                    color: secondary,
+                  size: Size(size * 0.4, size * 0.6),
+                  painter: LeafPainter(
+                    color: primary,
                     size: size,
                   ),
                 ),
               ),
-            ),
-            
-            // Top leaves
-            Positioned(
-              top: size * 0.15,
-              left: size * 0.25,
-              child: Transform.rotate(
-                angle: -0.3,
-                child: Container(
-                  width: size * 0.2,
-                  height: size * 0.15,
-                  decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(size * 0.1),
+              
+              // Smaller accent leaves
+              Positioned(
+                top: size * 0.25,
+                right: size * 0.25,
+                child: CustomPaint(
+                  size: Size(size * 0.2, size * 0.3),
+                  painter: LeafPainter(
+                    color: secondary.withValues(alpha: 0.8),
+                    size: size * 0.5,
                   ),
                 ),
               ),
-            ),
-            Positioned(
-              top: size * 0.15,
-              right: size * 0.25,
-              child: Transform.rotate(
-                angle: 0.3,
-                child: Container(
-                  width: size * 0.2,
-                  height: size * 0.15,
-                  decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: BorderRadius.circular(size * 0.1),
-                  ),
-                ),
+              
+              // Growth/wellness dots
+              Positioned(
+                bottom: size * 0.2,
+                left: size * 0.2,
+                child: _buildWellnessDot(primary, size * 0.06),
               ),
-            ),
-            
-            // Left community group
-            Positioned(
-              bottom: size * 0.1,
-              left: size * 0.05,
-              child: _buildCommunityGroup(secondary, size * 0.25, true),
-            ),
-            
-            // Right community group  
-            Positioned(
-              bottom: size * 0.1,
-              right: size * 0.05,
-              child: _buildCommunityGroup(secondary, size * 0.25, false),
-            ),
-            
-            // Small center head
-            Positioned(
-              top: size * 0.25,
-              left: size * 0.45,
-              child: Container(
-                width: size * 0.1,
-                height: size * 0.1,
-                decoration: BoxDecoration(
-                  color: secondary,
-                  shape: BoxShape.circle,
-                ),
+              Positioned(
+                bottom: size * 0.3,
+                right: size * 0.15,
+                child: _buildWellnessDot(secondary, size * 0.04),
               ),
-            ),
-          ],
+              Positioned(
+                top: size * 0.2,
+                left: size * 0.15,
+                child: _buildWellnessDot(primary.withValues(alpha: 0.6), size * 0.05),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
   
-  Widget _buildCommunityGroup(Color color, double groupSize, bool isLeft) {
-    return SizedBox(
-      width: groupSize,
-      height: groupSize,
-      child: Stack(
-        children: [
-          // Back person (smaller)
-          Positioned(
-            bottom: 0,
-            left: isLeft ? groupSize * 0.1 : groupSize * 0.4,
-            child: Container(
-              width: groupSize * 0.35,
-              height: groupSize * 0.8,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(groupSize * 0.1),
-              ),
-            ),
-          ),
-          // Front person (larger)  
-          Positioned(
-            bottom: 0,
-            left: isLeft ? groupSize * 0.4 : groupSize * 0.1,
-            child: Container(
-              width: groupSize * 0.45,
-              height: groupSize,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(groupSize * 0.12),
-              ),
-            ),
+  Widget _buildWellnessDot(Color color, double dotSize) {
+    return Container(
+      width: dotSize,
+      height: dotSize,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: dotSize * 0.2,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -160,11 +116,11 @@ class ThriveSpaceLogo extends StatelessWidget {
   }
 }
 
-class CentralFigurePainter extends CustomPainter {
+class LeafPainter extends CustomPainter {
   final Color color;
   final double size;
 
-  CentralFigurePainter({required this.color, required this.size});
+  LeafPainter({required this.color, required this.size});
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
@@ -173,33 +129,30 @@ class CentralFigurePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    
-    // Create Y-shaped figure (tree/person with arms raised)
     final width = canvasSize.width;
     final height = canvasSize.height;
-    
-    // Main trunk/body
-    path.moveTo(width * 0.4, height);
-    path.lineTo(width * 0.6, height);
-    path.lineTo(width * 0.55, height * 0.4);
-    path.lineTo(width * 0.45, height * 0.4);
+
+    // Create leaf shape
+    path.moveTo(width * 0.5, 0);
+    path.quadraticBezierTo(width * 0.8, height * 0.2, width * 0.9, height * 0.5);
+    path.quadraticBezierTo(width * 0.8, height * 0.8, width * 0.5, height);
+    path.quadraticBezierTo(width * 0.2, height * 0.8, width * 0.1, height * 0.5);
+    path.quadraticBezierTo(width * 0.2, height * 0.2, width * 0.5, 0);
     path.close();
-    
-    // Left arm/branch
-    path.moveTo(width * 0.45, height * 0.5);
-    path.lineTo(width * 0.1, height * 0.2);
-    path.lineTo(width * 0.2, height * 0.15);
-    path.lineTo(width * 0.5, height * 0.4);
-    path.close();
-    
-    // Right arm/branch
-    path.moveTo(width * 0.55, height * 0.5);
-    path.lineTo(width * 0.9, height * 0.2);
-    path.lineTo(width * 0.8, height * 0.15);
-    path.lineTo(width * 0.5, height * 0.4);
-    path.close();
-    
+
     canvas.drawPath(path, paint);
+
+    // Add leaf vein
+    final veinPaint = Paint()
+      ..color = color.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final veinPath = Path();
+    veinPath.moveTo(width * 0.5, height * 0.1);
+    veinPath.lineTo(width * 0.5, height * 0.9);
+
+    canvas.drawPath(veinPath, veinPaint);
   }
 
   @override

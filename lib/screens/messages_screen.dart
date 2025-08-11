@@ -3,76 +3,226 @@
 import 'package:flutter/material.dart';
 import '../utils/asset_manager.dart';
 import '../widgets/thrive_space_logo.dart';
+import '../services/database_service.dart';
+import '../services/auth_service.dart';
 
-class MessagesScreen extends StatelessWidget {
+class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
 
-  // Sample messages data using local assets
-  final List<Map<String, dynamic>> messages = const [
-    {
-      'name': 'Coach Mike',
-      'lastMessage': 'Great job on today\'s workout! Keep it up 💪',
-      'avatarUrl': AssetManager.profileMale1,
-      'time': '2m',
-      'unreadCount': 2,
-      'isOnline': true,
-      'isCoach': true,
-    },
-    {
-      'name': 'Anna Fitness',
-      'lastMessage': 'Thanks for the nutrition tips! 🙏',
-      'avatarUrl': AssetManager.profileFemale1,
-      'time': '15m',
-      'unreadCount': 1,
-      'isOnline': true,
-      'isCoach': false,
-    },
-    {
-      'name': 'Fitness Group',
-      'lastMessage': 'John: Anyone up for a morning run?',
-      'avatarUrl': AssetManager.workoutCardio,
-      'time': '1h',
-      'unreadCount': 3,
-      'isOnline': false,
-      'isGroup': true,
-    },
-    {
-      'name': 'Sarah T.',
-      'lastMessage': 'Sent a photo',
-      'avatarUrl': AssetManager.profile1,
-      'time': '2h',
-      'unreadCount': 0,
-      'isOnline': false,
-      'isCoach': false,
-    },
-    {
-      'name': 'David Nutrition',
-      'lastMessage': 'Your meal plan is ready for review',
-      'avatarUrl': AssetManager.profile2,
-      'time': '3h',
-      'unreadCount': 1,
-      'isOnline': true,
-      'isCoach': true,
-    },
-    {
-      'name': 'Yoga Masters',
-      'lastMessage': 'Emma: New class schedule posted!',
-      'avatarUrl': AssetManager.workoutYoga,
-      'time': '1d',
-      'unreadCount': 0,
-      'isOnline': false,
-      'isGroup': true,
-    },
-    {
-      'name': 'Tom Trainer',
-      'lastMessage': 'See you at the gym tomorrow!',
-      'avatarUrl': AssetManager.profileMale1,
-      'time': '2d',
-      'unreadCount': 0,
-      'isOnline': false,
-      'isCoach': true,
-    },
-  ];
+  @override
+  State<MessagesScreen> createState() => _MessagesScreenState();
+}
+
+class _MessagesScreenState extends State<MessagesScreen> {
+  final DatabaseService _databaseService = DatabaseService();
+  final AuthService _authService = AuthService();
+  List<Map<String, dynamic>> _conversations = [];
+  List<Map<String, dynamic>> _activeUsers = [];
+  bool _isLoadingConversations = true;
+  bool _isLoadingActiveUsers = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessagesData();
+  }
+
+  Future<void> _loadMessagesData() async {
+    final user = _authService.currentUser;
+    if (user == null) {
+      _loadSampleData();
+      return;
+    }
+
+    try {
+      final results = await Future.wait([
+        _databaseService.getConversations(userId: user.id),
+        _loadActiveUsers(),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _conversations = results[0] as List<Map<String, dynamic>>;
+          _activeUsers = results[1] as List<Map<String, dynamic>>;
+          _isLoadingConversations = false;
+          _isLoadingActiveUsers = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading messages data: $e');
+      _loadSampleData();
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _loadActiveUsers() async {
+    // For now, return sample active users that would normally come from Supabase
+    return [
+      {
+        'name': 'Coach Mike',
+        'avatar_url': AssetManager.profileMale1,
+        'is_online': true,
+      },
+      {
+        'name': 'Anna F.',
+        'avatar_url': AssetManager.profileFemale1,
+        'is_online': true,
+      },
+      {
+        'name': 'David N.',
+        'avatar_url': AssetManager.profile1,
+        'is_online': true,
+      },
+      {
+        'name': 'Sarah L.',
+        'avatar_url': AssetManager.profile2,
+        'is_online': true,
+      },
+    ];
+  }
+
+  void _loadSampleData() {
+    // Fallback sample data with Supabase-like structure
+    final sampleConversations = [
+      {
+        'id': 'conv_1',
+        'participant1': {
+          'full_name': 'Coach Mike',
+          'avatar_url': AssetManager.profileMale1,
+        },
+        'participant2': {
+          'full_name': 'You',
+          'avatar_url': '',
+        },
+        'last_message': {
+          'content': 'Great job on today\'s workout! Keep it up 💪',
+          'created_at': DateTime.now().subtract(const Duration(minutes: 2)).toIso8601String(),
+          'sender_id': 'coach_mike',
+        },
+        'unread_count': 2,
+        'is_online': true,
+        'updated_at': DateTime.now().subtract(const Duration(minutes: 2)).toIso8601String(),
+      },
+      {
+        'id': 'conv_2',
+        'participant1': {
+          'full_name': 'Anna Fitness',
+          'avatar_url': AssetManager.profileFemale1,
+        },
+        'participant2': {
+          'full_name': 'You',
+          'avatar_url': '',
+        },
+        'last_message': {
+          'content': 'Thanks for the nutrition tips! 🙏',
+          'created_at': DateTime.now().subtract(const Duration(minutes: 15)).toIso8601String(),
+          'sender_id': 'anna_f',
+        },
+        'unread_count': 1,
+        'is_online': true,
+        'updated_at': DateTime.now().subtract(const Duration(minutes: 15)).toIso8601String(),
+      },
+      {
+        'id': 'conv_3',
+        'participant1': {
+          'full_name': 'Fitness Group',
+          'avatar_url': AssetManager.workoutCardio,
+        },
+        'participant2': {
+          'full_name': 'You',
+          'avatar_url': '',
+        },
+        'last_message': {
+          'content': 'John: Anyone up for a morning run?',
+          'created_at': DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
+          'sender_id': 'john_runner',
+        },
+        'unread_count': 3,
+        'is_online': false,
+        'is_group': true,
+        'updated_at': DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
+      },
+      {
+        'id': 'conv_4',
+        'participant1': {
+          'full_name': 'Sarah T.',
+          'avatar_url': AssetManager.profile1,
+        },
+        'participant2': {
+          'full_name': 'You',
+          'avatar_url': '',
+        },
+        'last_message': {
+          'content': 'Sent a photo',
+          'created_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
+          'sender_id': 'sarah_t',
+        },
+        'unread_count': 0,
+        'is_online': false,
+        'updated_at': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
+      },
+      {
+        'id': 'conv_5',
+        'participant1': {
+          'full_name': 'David Nutrition',
+          'avatar_url': AssetManager.profile2,
+        },
+        'participant2': {
+          'full_name': 'You',
+          'avatar_url': '',
+        },
+        'last_message': {
+          'content': 'Your meal plan is ready for review',
+          'created_at': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
+          'sender_id': 'david_nutrition',
+        },
+        'unread_count': 1,
+        'is_online': true,
+        'updated_at': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
+      },
+    ];
+
+    final sampleActiveUsers = [
+      {
+        'name': 'Coach Mike',
+        'avatar_url': AssetManager.profileMale1,
+        'is_online': true,
+      },
+      {
+        'name': 'Anna F.',
+        'avatar_url': AssetManager.profileFemale1,
+        'is_online': true,
+      },
+      {
+        'name': 'David N.',
+        'avatar_url': AssetManager.profile1,
+        'is_online': true,
+      },
+    ];
+
+    if (mounted) {
+      setState(() {
+        _conversations = sampleConversations;
+        _activeUsers = sampleActiveUsers;
+        _isLoadingConversations = false;
+        _isLoadingActiveUsers = false;
+      });
+    }
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return "${difference.inDays}d";
+    } else if (difference.inHours > 0) {
+      return "${difference.inHours}h";
+    } else if (difference.inMinutes > 0) {
+      return "${difference.inMinutes}m";
+    } else {
+      return "now";
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,21 +249,20 @@ class MessagesScreen extends StatelessWidget {
           // Messages list
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () async {
-                // Refresh messages logic
-                await Future.delayed(const Duration(seconds: 1));
-              },
-              child: messages.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.separated(
-                      itemCount: messages.length,
-                      separatorBuilder: (context, index) =>
-                          Divider(height: 1, color: Colors.grey[200]),
-                      itemBuilder: (context, index) {
-                        final msg = messages[index];
-                        return _buildMessageTile(context, msg);
-                      },
-                    ),
+              onRefresh: _loadMessagesData,
+              child: _isLoadingConversations
+                  ? _buildLoadingState()
+                  : _conversations.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.separated(
+                          itemCount: _conversations.length,
+                          separatorBuilder: (context, index) =>
+                              Divider(height: 1, color: Colors.grey[200]),
+                          itemBuilder: (context, index) {
+                            final conversation = _conversations[index];
+                            return _buildMessageTile(context, conversation);
+                          },
+                        ),
             ),
           ),
         ],
@@ -127,14 +276,11 @@ class MessagesScreen extends StatelessWidget {
   }
 
   Widget _buildActiveUsers() {
-    final activeUsers = messages
-        .where((msg) => msg['isOnline'] == true && msg['isGroup'] != true)
-        .toList();
-
-    if (activeUsers.isEmpty) return const SizedBox.shrink();
+    if (_isLoadingActiveUsers) return _buildActiveUsersLoading();
+    if (_activeUsers.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      height: 90,
+      height: 100,
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,15 +300,17 @@ class MessagesScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: activeUsers.length,
+              itemCount: _activeUsers.length,
               itemBuilder: (context, index) {
-                final user = activeUsers[index];
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: index == 0 ? 16 : 8,
-                    right: index == activeUsers.length - 1 ? 16 : 0,
+                final user = _activeUsers[index];
+                return Container(
+                  width: 70,
+                  margin: EdgeInsets.only(
+                    left: index == 0 ? 16 : 4,
+                    right: index == _activeUsers.length - 1 ? 16 : 4,
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Stack(
                         children: [
@@ -174,42 +322,51 @@ class MessagesScreen extends StatelessWidget {
                               color: Colors.grey,
                             ),
                             child: ClipOval(
-                              child: Image.asset(
-                                user['avatarUrl']!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
+                              child: user['avatar_url']?.isNotEmpty == true
+                                ? Image.asset(
+                                    user['avatar_url']!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                        size: 24,
+                                      );
+                                    },
+                                  )
+                                : const Icon(
                                     Icons.person,
                                     color: Colors.white,
                                     size: 24,
-                                  );
-                                },
-                              ),
+                                  ),
                             ),
                           ),
-                          Positioned(
-                            bottom: 0,
-                            right: 2,
-                            child: Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
+                          if (user['is_online'] == true)
+                            Positioned(
+                              bottom: 0,
+                              right: 2,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
-                        user['name']!.split(' ')[0], // First name only
+                        user['name']?.split(' ')[0] ?? 'User',
                         style: const TextStyle(fontSize: 11),
+                        textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ),
@@ -222,7 +379,24 @@ class MessagesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMessageTile(BuildContext context, Map<String, dynamic> msg) {
+  Widget _buildMessageTile(BuildContext context, Map<String, dynamic> conversation) {
+    final participant1 = conversation['participant1'] as Map<String, dynamic>?;
+    final participant2 = conversation['participant2'] as Map<String, dynamic>?;
+    final lastMessage = conversation['last_message'] as Map<String, dynamic>?;
+    
+    // Determine which participant is not the current user
+    final otherParticipant = participant1?['full_name'] != 'You' ? participant1 : participant2;
+    final displayName = otherParticipant?['full_name'] ?? 'Unknown User';
+    final avatarUrl = otherParticipant?['avatar_url'] ?? '';
+    
+    final unreadCount = conversation['unread_count'] ?? 0;
+    final isGroup = conversation['is_group'] == true;
+    final isOnline = conversation['is_online'] == true;
+    
+    final timeAgo = lastMessage != null 
+        ? _getTimeAgo(DateTime.parse(lastMessage['created_at']))
+        : '';
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Stack(
@@ -235,20 +409,26 @@ class MessagesScreen extends StatelessWidget {
               color: Colors.grey,
             ),
             child: ClipOval(
-              child: Image.asset(
-                msg['avatarUrl']!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.person,
+              child: avatarUrl.isNotEmpty
+                ? Image.asset(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.person,
+                        color: Colors.white,
+                        size: 32,
+                      );
+                    },
+                  )
+                : Icon(
+                    isGroup ? Icons.group : Icons.person,
                     color: Colors.white,
                     size: 32,
-                  );
-                },
-              ),
+                  ),
             ),
           ),
-          if (msg['isOnline'] == true)
+          if (isOnline)
             Positioned(
               bottom: 0,
               right: 0,
@@ -262,7 +442,7 @@ class MessagesScreen extends StatelessWidget {
                 ),
               ),
             ),
-          if (msg['isCoach'] == true)
+          if (displayName.toLowerCase().contains('coach'))
             Positioned(
               top: 0,
               right: 0,
@@ -285,15 +465,15 @@ class MessagesScreen extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              msg['name']!,
+              displayName,
               style: TextStyle(
-                fontWeight: msg['unreadCount'] > 0
+                fontWeight: unreadCount > 0
                     ? FontWeight.bold
                     : FontWeight.w600,
               ),
             ),
           ),
-          if (msg['isGroup'] == true)
+          if (isGroup)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -308,12 +488,12 @@ class MessagesScreen extends StatelessWidget {
         ],
       ),
       subtitle: Text(
-        msg['lastMessage']!,
+        lastMessage?['content'] ?? 'No messages yet',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: msg['unreadCount'] > 0 ? Colors.black87 : Colors.grey[600],
-          fontWeight: msg['unreadCount'] > 0
+          color: unreadCount > 0 ? Colors.black87 : Colors.grey[600],
+          fontWeight: unreadCount > 0
               ? FontWeight.w500
               : FontWeight.normal,
         ),
@@ -323,16 +503,16 @@ class MessagesScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            msg['time']!,
+            timeAgo,
             style: TextStyle(
               fontSize: 12,
-              color: msg['unreadCount'] > 0 ? Colors.blue : Colors.grey,
-              fontWeight: msg['unreadCount'] > 0
+              color: unreadCount > 0 ? Colors.blue : Colors.grey,
+              fontWeight: unreadCount > 0
                   ? FontWeight.w600
                   : FontWeight.normal,
             ),
           ),
-          if (msg['unreadCount'] > 0) ...[
+          if (unreadCount > 0) ...[
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -341,7 +521,7 @@ class MessagesScreen extends StatelessWidget {
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
               child: Text(
-                '${msg['unreadCount']}',
+                unreadCount > 9 ? '9+' : '$unreadCount',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -354,7 +534,7 @@ class MessagesScreen extends StatelessWidget {
       ),
       onTap: () {
         // Navigate to chat detail screen
-        _openChatDetail(context, msg);
+        _openChatDetail(context, conversation);
       },
     );
   }
@@ -396,17 +576,123 @@ class MessagesScreen extends StatelessWidget {
     );
   }
 
-  void _openChatDetail(BuildContext context, Map<String, dynamic> msg) {
-    // Navigate to individual chat screen
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ChatDetailScreen(
-          userName: msg['name']!,
-          userAvatar: msg['avatarUrl']!,
-          isOnline: msg['isOnline'] ?? false,
-          isCoach: msg['isCoach'] ?? false,
-        ),
+  void _openChatDetail(BuildContext context, Map<String, dynamic> conversation) {
+    final participant1 = conversation['participant1'] as Map<String, dynamic>?;
+    final participant2 = conversation['participant2'] as Map<String, dynamic>?;
+    final otherParticipant = participant1?['full_name'] != 'You' ? participant1 : participant2;
+    final displayName = otherParticipant?['full_name'] ?? 'Unknown User';
+    final avatarUrl = otherParticipant?['avatar_url'] ?? '';
+    
+    // TODO: Navigate to chat detail screen
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Opening chat with $displayName"),
+        duration: const Duration(seconds: 2),
       ),
+    );
+  }
+
+  Widget _buildActiveUsersLoading() {
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Active Now',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 4,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 70,
+                  margin: EdgeInsets.only(
+                    left: index == 0 ? 16 : 4,
+                    right: index == 3 ? 16 : 4,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey[300],
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        width: 40,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return ListView.builder(
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          leading: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.grey[300],
+            ),
+          ),
+          title: Container(
+            width: 150,
+            height: 16,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          subtitle: Container(
+            width: 200,
+            height: 14,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(7),
+            ),
+          ),
+          trailing: Container(
+            width: 20,
+            height: 12,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        );
+      },
     );
   }
 }

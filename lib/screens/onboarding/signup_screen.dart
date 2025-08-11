@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/thrive_space_logo.dart';
+import '../../services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   final Function(Map<String, dynamic>) onSignUp;
@@ -23,6 +24,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
   
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
@@ -54,20 +56,60 @@ class _SignupScreenState extends State<SignupScreen> {
       _errorMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await _authService.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        metadata: {
+          'full_name': _nameController.text.trim(),
+        },
+      );
 
-    // Mock user creation - replace with real API call
-    widget.onSignUp({
-      'name': _nameController.text.trim(),
-      'email': _emailController.text.trim().toLowerCase(),
-      'avatar': '',
-      'isNewUser': true,
-    });
+      if (response.user != null) {
+        final userData = {
+          'id': response.user!.id,
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim().toLowerCase(),
+          'avatar': '',
+          'isNewUser': true,
+        };
+        
+        // Show success message for email confirmation
+        if (!_authService.isEmailConfirmed && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please check your email to confirm your account before signing in.'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        
+        widget.onSignUp(userData);
+      } else {
+        setState(() {
+          _errorMessage = 'Sign up failed. Please try again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = _getErrorMessage(e.toString());
+      });
+    }
 
     setState(() {
       _isLoading = false;
     });
+  }
+
+  String _getErrorMessage(String error) {
+    if (error.contains('User already registered')) {
+      return 'This email is already registered. Please sign in instead.';
+    } else if (error.contains('Password should be at least 6 characters')) {
+      return 'Password must be at least 6 characters long.';
+    } else if (error.contains('Invalid email')) {
+      return 'Please enter a valid email address.';
+    }
+    return 'An error occurred during sign up. Please try again.';
   }
 
   @override

@@ -200,7 +200,6 @@ class _SplashScreenState extends State<SplashScreen>
                               child: const ThriveSpaceLogo(
                                 size: 64,
                                 primaryColor: Color(0xFF22c55e),
-                                secondaryColor: Color(0xFF0891b2),
                                 backgroundColor: Colors.white,
                               ),
                             ),

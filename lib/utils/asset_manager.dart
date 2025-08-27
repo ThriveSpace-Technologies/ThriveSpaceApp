@@ -39,9 +39,16 @@ class AssetManager {
 
   // Branding Assets
   static const String appLogo = '${_brandingPath}app_logo.png';
-  static const String thriveSpaceLogo = '${_brandingPath}thrivespace_simple_logo.png';
+  static const String thriveSpaceLogo =
+      '${_brandingPath}thrivespace_simple_logo.png';
+  static const String newThriveSpaceLogo =
+      '${_brandingPath}thrivespace_logo.png';
   static const String splashBackground =
       '${_brandingPath}splash_background.jpg';
+
+  // SVG Assets
+  static const String _svgPath = 'assets/svg/';
+  static const String pixeltrueYogaSvg = '${_svgPath}pixeltrue_yoga.svg';
 
   // Coach Profiles
   static const String coachMike = '${_coachesPath}coach_mike.jpg';

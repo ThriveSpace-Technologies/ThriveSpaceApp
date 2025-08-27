@@ -547,7 +547,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ThriveSpaceLogo(
             size: 80,
             primaryColor: Colors.grey[300],
-            secondaryColor: Colors.grey[400],
             backgroundColor: Colors.white,
           ),
           const SizedBox(height: 24),

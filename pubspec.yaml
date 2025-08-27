@@ -14,6 +14,21 @@ dependencies:
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.5.6
   flutter_dotenv: ^5.1.0
+  flutter_svg: ^2.0.9
+  # Material Design 3 and Modern UI
+  material_color_utilities: ^0.11.1
+  dynamic_color: ^1.7.0
+  # Icons and UI
+  lucide_icons: ^0.257.0
+  # State Management
+  riverpod: ^2.5.1
+  flutter_riverpod: ^2.5.1
+  # HTTP and Networking
+  http: ^1.2.2
+  # Image loading and caching
+  cached_network_image: ^3.4.1
+  # Animations
+  animations: ^2.0.11
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +78,10 @@ flutter:
     - assets/images/branding/app_logo.png
     - assets/images/branding/thrivespace_simple_logo.png
     - assets/images/branding/splash_background.jpg
+    
+    # SVG Assets
+    - assets/svg/
+    - assets/svg/pixeltrue_yoga.svg
     
     # Coach Profiles
     - assets/images/coaches/

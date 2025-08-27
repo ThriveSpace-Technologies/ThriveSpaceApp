@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../widgets/animated/animated_button.dart';
+import '../../widgets/animated/animated_text_field.dart';
 
 class LoginScreen extends StatefulWidget {
   final VoidCallback onSignIn;
@@ -173,62 +175,36 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Email field
-                        Text(
-                          'Email',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
+                        AnimatedWellnessTextField(
                           controller: _emailController,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your email',
-                            prefixIcon: Icon(
-                              LucideIcons.mail,
-                              size: 16,
-                              color: colorScheme.onSurface.withOpacity(0.6),
-                            ),
-                            contentPadding: const EdgeInsets.all(16),
-                          ),
+                          labelText: 'Email',
+                          hintText: 'Enter your email',
+                          prefixIcon: LucideIcons.mail,
                           keyboardType: TextInputType.emailAddress,
                         ),
                         
                         const SizedBox(height: 16),
 
                         // Password field
-                        Text(
-                          'Password',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
+                        AnimatedWellnessTextField(
                           controller: _passwordController,
+                          labelText: 'Password',
+                          hintText: 'Enter your password',
+                          prefixIcon: LucideIcons.lock,
                           obscureText: !_isPasswordVisible,
-                          decoration: InputDecoration(
-                            hintText: 'Enter your password',
-                            prefixIcon: Icon(
-                              LucideIcons.lock,
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _isPasswordVisible = !_isPasswordVisible;
+                              });
+                            },
+                            icon: Icon(
+                              _isPasswordVisible
+                                  ? LucideIcons.eyeOff
+                                  : LucideIcons.eye,
                               size: 16,
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
-                              icon: Icon(
-                                _isPasswordVisible
-                                    ? LucideIcons.eyeOff
-                                    : LucideIcons.eye,
-                                size: 16,
-                                color: colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.all(16),
                           ),
                         ),
 
@@ -254,14 +230,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     // Sign in button
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
+                      child: AnimatedWellnessButton(
                         onPressed: _handleSignIn,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        borderRadius: BorderRadius.circular(16),
                         child: const Text(
                           'Sign In',
                           style: TextStyle(
@@ -328,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: AnimatedWellnessButton(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -337,18 +309,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          foregroundColor: textColor,
-          elevation: border ? 0 : 2,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: border
-                ? BorderSide(color: colorScheme.outline.withOpacity(0.3))
-                : BorderSide.none,
-          ),
-        ),
+        backgroundColor: backgroundColor,
+        foregroundColor: textColor,
+        elevation: border ? 0 : 2,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        borderRadius: BorderRadius.circular(16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

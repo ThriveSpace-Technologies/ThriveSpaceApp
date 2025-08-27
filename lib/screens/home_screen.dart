@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../widgets/animated/animated_card.dart';
+import '../widgets/animated/animated_navigation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -224,18 +226,13 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
 
-                  // Tab Bar
-                  TabBar(
-                    controller: _tabController,
-                    indicatorColor: colorScheme.primary,
-                    labelColor: colorScheme.primary,
-                    unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
-                    indicatorWeight: 2,
-                    tabs: const [
-                      Tab(text: 'For You'),
-                      Tab(text: 'Following'),
-                      Tab(text: 'Wellness News'),
-                    ],
+                  // Animated Tab Bar
+                  AnimatedTopTabBar(
+                    tabs: const ['For You', 'Following', 'Wellness News'],
+                    currentIndex: _tabController.index,
+                    onTap: (index) {
+                      _tabController.animateTo(index);
+                    },
                   ),
                 ],
               ),
@@ -279,23 +276,24 @@ class _HomeScreenState extends State<HomeScreen>
       padding: const EdgeInsets.symmetric(vertical: 16),
       itemCount: posts.length,
       itemBuilder: (context, index) {
-        return _buildPost(posts[index]);
+        return AnimatedWellnessCard(
+          animationDelay: index * 100,
+          onTap: () {
+            // Handle post tap
+          },
+          child: _buildPostContent(posts[index]),
+        );
       },
     );
   }
 
-  Widget _buildPost(Map<String, dynamic> post) {
+  Widget _buildPostContent(Map<String, dynamic> post) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
               // User Info
               Row(
                 children: [
@@ -443,9 +441,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
             ],
-          ),
-        ),
-      ),
     );
   }
 }

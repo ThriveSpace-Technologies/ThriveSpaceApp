@@ -4,7 +4,9 @@ import '../screens/home_screen.dart';
 import '../screens/journey_screen.dart';
 import '../screens/messages_screen.dart';
 import '../screens/learn_screen.dart';
+import '../utils/animation_constants.dart';
 import 'explore_screen.dart';
+import 'animated/animated_navigation.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -13,8 +15,11 @@ class MainNavigation extends StatefulWidget {
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MainNavigationState extends State<MainNavigation> {
+class _MainNavigationState extends State<MainNavigation>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
+  late AnimationController _screenController;
+  late Animation<Offset> _screenAnimation;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -47,113 +52,75 @@ class _MainNavigationState extends State<MainNavigation> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _screenController = AnimationController(
+      duration: WellnessAnimations.tabTransition,
+      vsync: this,
+    );
+    _screenAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _screenController,
+      curve: WellnessAnimations.tabCurve,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _screenController.dispose();
+    super.dispose();
+  }
+
   void _onNavTap(int index) {
+    if (index == _currentIndex) return;
+    
+    final direction = index > _currentIndex ? 1.0 : -1.0;
+    
+    _screenAnimation = Tween<Offset>(
+      begin: Offset(direction, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _screenController,
+      curve: WellnessAnimations.tabCurve,
+    ));
+
     setState(() {
       _currentIndex = index;
     });
+
+    _screenController.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
       body: Stack(
         children: [
-          // Main content
-          IndexedStack(
-            index: _currentIndex,
-            children: _screens,
+          // Main content with slide transition
+          SlideTransition(
+            position: _screenAnimation,
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _screens,
+            ),
           ),
           
-          // Bottom navigation
+          // Animated bottom navigation
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor.withOpacity(0.95),
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.2),
-                    width: 0.5,
-                  ),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 448),
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(_navItems.length, (index) {
-                      final item = _navItems[index];
-                      final isActive = _currentIndex == index;
-                      
-                      return Expanded(
-                        child: InkWell(
-                          onTap: () => _onNavTap(index),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 4,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  item.icon,
-                                  size: 20,
-                                  color: isActive
-                                      ? colorScheme.primary
-                                      : colorScheme.onSurface.withOpacity(0.6),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  item.label,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isActive
-                                        ? FontWeight.w500
-                                        : FontWeight.w400,
-                                    color: isActive
-                                        ? colorScheme.primary
-                                        : colorScheme.onSurface.withOpacity(0.6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
+            child: AnimatedBottomNavigation(
+              currentIndex: _currentIndex,
+              onTap: _onNavTap,
+              items: _navItems,
             ),
           ),
         ],
       ),
     );
   }
-}
-
-class BottomNavItem {
-  final IconData icon;
-  final String label;
-
-  BottomNavItem({
-    required this.icon,
-    required this.label,
-  });
 }

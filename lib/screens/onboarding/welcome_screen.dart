@@ -181,7 +181,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               ),
                               const SizedBox(height: 8), // space-y-2
                               Text(
-                                'Mindful Wellness,\\nAnytime',
+                                'Mindful Wellness,\nAnytime',
                                 style: TextStyle(
                                   fontSize: 14, // Small text
                                   fontWeight: FontWeight.w400, // Regular

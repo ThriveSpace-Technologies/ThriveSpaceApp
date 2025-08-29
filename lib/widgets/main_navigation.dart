@@ -97,29 +97,17 @@ class _MainNavigationState extends State<MainNavigation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Main content with slide transition
-          SlideTransition(
-            position: _screenAnimation,
-            child: IndexedStack(
-              index: _currentIndex,
-              children: _screens,
-            ),
-          ),
-          
-          // Animated bottom navigation
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: AnimatedBottomNavigation(
-              currentIndex: _currentIndex,
-              onTap: _onNavTap,
-              items: _navItems,
-            ),
-          ),
-        ],
+      body: SlideTransition(
+        position: _screenAnimation,
+        child: IndexedStack(
+          index: _currentIndex,
+          children: _screens,
+        ),
+      ),
+      bottomNavigationBar: AnimatedBottomNavigation(
+        currentIndex: _currentIndex,
+        onTap: _onNavTap,
+        items: _navItems,
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../widgets/animated/animated_card.dart';
 import '../widgets/animated/animated_navigation.dart';
+import '../widgets/animated/animated_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,11 +13,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tabController;
-  final PageController _pageController = PageController();
-  bool _isDarkMode = false;
+  late AnimationController _badgeController;
+  late Animation<double> _badgeAnimation;
 
+  // Mock data matching React exactly
   final List<Map<String, dynamic>> _mockPosts = [
     {
       'id': '1',
@@ -59,18 +61,63 @@ class _HomeScreenState extends State<HomeScreen>
       'timestamp': '6h',
       'isLiked': false
     },
+    {
+      'id': '4',
+      'user': {
+        'name': 'Dr. Alex Park',
+        'username': 'drpark_wellness',
+        'avatar': 'https://images.unsplash.com/photo-1559209172-d0d45d8d1ce8?w=150&h=150&fit=crop&crop=face'
+      },
+      'content': 'The science is clear: just 15 minutes of daily mindfulness practice can reduce stress hormones by up to 23%. Small habits, big impact.',
+      'image': 'https://images.unsplash.com/photo-1601921386176-d6b3206b6ace?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW50YWwlMjBoZWFsdGglMjBzZWxmJTIwY2FyZXxlbnwxfHx8fDE3NTYyNjk3MjZ8MA&ixlib=rb-4.1.0&q=80&w=1080',
+      'likes': 89,
+      'comments': 31,
+      'timestamp': '8h',
+      'isLiked': true
+    },
+    {
+      'id': '5',
+      'user': {
+        'name': 'Luna Rodriguez',
+        'username': 'lunaheals',
+        'avatar': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face'
+      },
+      'content': 'Meal prep Sunday is self-care Sunday. Nourishing my body with colorful, whole foods sets me up for a week of energy and vitality 🥗💚',
+      'image': 'https://images.unsplash.com/photo-1613637069737-2cce919a4ab7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGh5JTIwbGlmZXN0eWxlJTIwd2VsbG5lc3N8ZW58MXx8fHwxNzU2MjUzMDMyfDA&ixlib=rb-4.1.0&q=80&w=1080',
+      'likes': 35,
+      'comments': 15,
+      'timestamp': '12h',
+      'isLiked': false
+    }
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Badge pulse animation
+    _badgeController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    
+    _badgeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _badgeController,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Start badge pulse
+    _badgeController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _pageController.dispose();
+    _badgeController.dispose();
     super.dispose();
   }
 
@@ -93,9 +140,15 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _toggleTheme() {
-    setState(() {
-      _isDarkMode = !_isDarkMode;
-    });
+    // Toggle theme via inherited widget or provider
+    final brightness = Theme.of(context).brightness;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Theme: ${brightness == Brightness.light ? 'Dark' : 'Light'} mode'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _handleNewPost() {
@@ -111,22 +164,25 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
-          // Custom App Bar
-          SafeArea(
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.scaffoldBackgroundColor.withOpacity(0.95),
-                border: Border(
-                  bottom: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.1),
-                    width: 0.5,
-                  ),
+          // Header matching React design exactly
+          Container(
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor.withValues(alpha: 0.95),
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outline.withValues(alpha: 0.1),
+                  width: 0.5,
                 ),
               ),
+            ),
+            child: SafeArea(
+              bottom: false,
               child: Column(
                 children: [
                   // Header row
@@ -134,12 +190,15 @@ class _HomeScreenState extends State<HomeScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
                       children: [
-                        // Profile Avatar
-                        GestureDetector(
-                          onTap: _handleProfileClick,
+                        // Profile Avatar (left)
+                        AnimatedWellnessButton(
+                          onPressed: _handleProfileClick,
+                          backgroundColor: Colors.transparent,
+                          padding: EdgeInsets.zero,
+                          borderRadius: BorderRadius.circular(20),
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundColor: colorScheme.primary.withOpacity(0.1),
+                            backgroundColor: colorScheme.surfaceContainerHighest,
                             backgroundImage: const CachedNetworkImageProvider(
                               'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
                             ),
@@ -147,7 +206,7 @@ class _HomeScreenState extends State<HomeScreen>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: colorScheme.primary.withOpacity(0.2),
+                                  color: colorScheme.primary.withValues(alpha: 0.2),
                                   width: 1,
                                 ),
                               ),
@@ -155,12 +214,14 @@ class _HomeScreenState extends State<HomeScreen>
                           ),
                         ),
 
-                        // App Title
+                        // App Title (center)
                         Expanded(
                           child: Text(
                             'ThriveSpace',
-                            style: theme.textTheme.headlineSmall?.copyWith(
+                            style: TextStyle(
+                              fontSize: 18,
                               fontWeight: FontWeight.w600,
+                              color: colorScheme.onSurface,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -169,53 +230,64 @@ class _HomeScreenState extends State<HomeScreen>
                         // Right Actions
                         Row(
                           children: [
-                            IconButton(
+                            // Theme Toggle
+                            AnimatedWellnessButton(
                               onPressed: _toggleTheme,
-                              icon: Icon(
-                                _isDarkMode ? LucideIcons.sun : LucideIcons.moon,
-                                size: 20,
-                                color: colorScheme.onSurface.withOpacity(0.7),
-                              ),
-                              style: IconButton.styleFrom(
-                                backgroundColor: colorScheme.surface,
-                                padding: const EdgeInsets.all(8),
+                              backgroundColor: colorScheme.surface,
+                              padding: const EdgeInsets.all(8),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Icon(
+                                isDark ? LucideIcons.sun : LucideIcons.moon,
+                                size: 16,
+                                color: colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                             ),
+                            
                             const SizedBox(width: 8),
+                            
+                            // Notifications with badge pulse
                             Stack(
+                              clipBehavior: Clip.none,
                               children: [
-                                IconButton(
+                                AnimatedWellnessButton(
                                   onPressed: _handleNotifications,
-                                  icon: Icon(
+                                  backgroundColor: colorScheme.surface,
+                                  padding: const EdgeInsets.all(8),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Icon(
                                     LucideIcons.bell,
-                                    size: 20,
-                                    color: colorScheme.onSurface.withOpacity(0.7),
-                                  ),
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: colorScheme.surface,
-                                    padding: const EdgeInsets.all(8),
+                                    size: 16,
+                                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                                   ),
                                 ),
                                 Positioned(
-                                  right: 6,
-                                  top: 6,
-                                  child: Container(
-                                    width: 16,
-                                    height: 16,
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        '3',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
+                                  right: -2,
+                                  top: -2,
+                                  child: AnimatedBuilder(
+                                    animation: _badgeAnimation,
+                                    builder: (context, child) {
+                                      return Transform.scale(
+                                        scale: _badgeAnimation.value,
+                                        child: Container(
+                                          width: 16,
+                                          height: 16,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Center(
+                                            child: Text(
+                                              '3',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ],
@@ -226,7 +298,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
 
-                  // Animated Tab Bar
+                  // Sub-tabs with smooth indicator animation
                   AnimatedTopTabBar(
                     tabs: const ['For You', 'Following', 'Wellness News'],
                     currentIndex: _tabController.index,
@@ -239,48 +311,70 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
 
-          // Tab Content
+          // Content with constrained width like React
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildPostsList(_mockPosts),
-                _buildPostsList(_mockPosts.where((post) => 
-                    post['user']['username'] == 'emmawellness' || 
-                    post['user']['username'] == 'marcusyoga').toList()),
-                _buildPostsList(_mockPosts.where((post) => 
-                    post['user']['username'] == 'drpark_wellness').toList()),
-              ],
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 448), // max-w-md
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildPostsList(_mockPosts),
+                    _buildPostsList(_mockPosts.where((post) => 
+                        post['user']['username'] == 'emmawellness' || 
+                        post['user']['username'] == 'marcusyoga').toList()),
+                    _buildPostsList(_mockPosts.where((post) => 
+                        post['user']['username'] == 'drpark_wellness').toList()),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
       ),
 
       // Floating Action Button
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: AnimatedWellnessButton(
         onPressed: _handleNewPost,
         backgroundColor: colorScheme.primary,
-        child: const Icon(LucideIcons.plus, color: Colors.white),
+        borderRadius: BorderRadius.circular(28),
+        padding: const EdgeInsets.all(16),
+        child: const Icon(
+          LucideIcons.plus,
+          color: Colors.white,
+          size: 24,
+        ),
       ),
     );
   }
 
   Widget _buildPostsList(List<Map<String, dynamic>> posts) {
     if (posts.isEmpty) {
-      return const Center(
-        child: Text('No posts to show'),
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            'More wellness news coming soon...',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       itemCount: posts.length,
       itemBuilder: (context, index) {
         return AnimatedWellnessCard(
-          animationDelay: index * 100,
+          animationDelay: index * 100, // Staggered entrance
           onTap: () {
             // Handle post tap
           },
+          margin: const EdgeInsets.only(bottom: 16),
           child: _buildPostContent(posts[index]),
         );
       },
@@ -294,153 +388,173 @@ class _HomeScreenState extends State<HomeScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-              // User Info
-              Row(
+        // User Info
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundImage: CachedNetworkImageProvider(
+                post['user']['avatar'],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: CachedNetworkImageProvider(
-                      post['user']['avatar'],
+                  Text(
+                    post['user']['name'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          post['user']['name'],
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '@${post['user']['username']} • ${post['timestamp']}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      LucideIcons.moreVertical,
-                      size: 20,
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                  Text(
+                    '@${post['user']['username']} • ${post['timestamp']}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 12),
-
-              // Content
-              Text(
-                post['content'],
-                style: theme.textTheme.bodyMedium,
+            ),
+            AnimatedWellnessButton(
+              onPressed: () {},
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.all(8),
+              borderRadius: BorderRadius.circular(20),
+              child: Icon(
+                LucideIcons.moreVertical,
+                size: 16,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
+            ),
+          ],
+        ),
 
-              // Image if present
-              if (post['image'] != null) ...[
-                const SizedBox(height: 12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: post['image'],
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 200,
-                      color: colorScheme.surface,
-                      child: const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 200,
-                      color: colorScheme.surface,
-                      child: const Center(
-                        child: Icon(Icons.error),
-                      ),
-                    ),
+        const SizedBox(height: 12),
+
+        // Content
+        Text(
+          post['content'],
+          style: const TextStyle(
+            fontSize: 16,
+            height: 1.5,
+          ),
+        ),
+
+        // Image if present
+        if (post['image'] != null) ...[
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: CachedNetworkImage(
+              imageUrl: post['image'],
+              width: double.infinity,
+              height: 200,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                height: 200,
+                color: colorScheme.surfaceContainerHighest,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    color: colorScheme.primary,
+                  ),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                height: 200,
+                color: colorScheme.surfaceContainerHighest,
+                child: Icon(
+                  LucideIcons.image,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 12),
+
+        // Actions
+        Row(
+          children: [
+            // Like button with animation
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedWellnessButton(
+                  onPressed: () {
+                    // Toggle like with heart animation
+                  },
+                  backgroundColor: Colors.transparent,
+                  padding: const EdgeInsets.all(8),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Icon(
+                    post['isLiked'] ? LucideIcons.heart : LucideIcons.heart,
+                    size: 20,
+                    color: post['isLiked'] 
+                        ? Colors.red 
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                Text('${post['likes']}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
+            ),
 
-              const SizedBox(height: 12),
+            const SizedBox(width: 16),
 
-              // Actions
-              Row(
-                children: [
-                  // Like button
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // Toggle like
-                        },
-                        icon: Icon(
-                          post['isLiked'] ? LucideIcons.heart : LucideIcons.heart,
-                          size: 20,
-                          color: post['isLiked'] 
-                              ? Colors.red 
-                              : colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        style: IconButton.styleFrom(
-                          minimumSize: const Size(40, 40),
-                          padding: const EdgeInsets.all(8),
-                        ),
-                      ),
-                      Text('${post['likes']}'),
-                    ],
+            // Comment button
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedWellnessButton(
+                  onPressed: () {
+                    // Show comments
+                  },
+                  backgroundColor: Colors.transparent,
+                  padding: const EdgeInsets.all(8),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Icon(
+                    LucideIcons.messageCircle,
+                    size: 20,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
-
-                  const SizedBox(width: 16),
-
-                  // Comment button
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // Show comments
-                        },
-                        icon: Icon(
-                          LucideIcons.messageCircle,
-                          size: 20,
-                          color: colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        style: IconButton.styleFrom(
-                          minimumSize: const Size(40, 40),
-                          padding: const EdgeInsets.all(8),
-                        ),
-                      ),
-                      Text('${post['comments']}'),
-                    ],
+                ),
+                Text('${post['comments']}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
+                ),
+              ],
+            ),
 
-                  const Spacer(),
+            const Spacer(),
 
-                  // Share button
-                  IconButton(
-                    onPressed: () {
-                      // Share post
-                    },
-                    icon: Icon(
-                      LucideIcons.share,
-                      size: 20,
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(40, 40),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                  ),
-                ],
+            // Share button
+            AnimatedWellnessButton(
+              onPressed: () {
+                // Share post
+              },
+              backgroundColor: Colors.transparent,
+              padding: const EdgeInsets.all(8),
+              borderRadius: BorderRadius.circular(20),
+              child: Icon(
+                LucideIcons.share,
+                size: 20,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
-            ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

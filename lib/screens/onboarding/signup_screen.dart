@@ -110,35 +110,35 @@ class _SignupScreenState extends State<SignupScreen> {
 
                     const SizedBox(height: 32),
 
-                    // Social login buttons
-                    Column(
-                      children: [
-                        _buildSocialButton(
-                          icon: Icons.apple,
-                          text: 'Continue with Apple',
-                          backgroundColor: Colors.black,
-                          textColor: Colors.white,
-                          colorScheme: colorScheme,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSocialButton(
-                          icon: LucideIcons.mail,
-                          text: 'Continue with Google',
-                          backgroundColor: Colors.white,
-                          textColor: Colors.black,
-                          border: true,
-                          colorScheme: colorScheme,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSocialButton(
-                          icon: Icons.facebook,
-                          text: 'Continue with Facebook',
-                          backgroundColor: const Color(0xFF1877F2),
-                          textColor: Colors.white,
-                          colorScheme: colorScheme,
-                        ),
-                      ],
-                    ),
+                      // Social login buttons
+                      Column(
+                        children: [
+                          _buildSocialButton(
+                            icon: Icons.apple,
+                            text: 'Continue with Apple',
+                            backgroundColor: Colors.black,
+                            textColor: Colors.white,
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildSocialButton(
+                            icon: LucideIcons.mail,
+                            text: 'Continue with Google',
+                            backgroundColor: Colors.white,
+                            textColor: Colors.black,
+                            border: true,
+                            colorScheme: colorScheme,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildSocialButton(
+                            icon: Icons.facebook,
+                            text: 'Continue with Facebook',
+                            backgroundColor: const Color(0xFF1877F2),
+                            textColor: Colors.white,
+                            colorScheme: colorScheme,
+                          ),
+                        ],
+                      ),
 
                     const SizedBox(height: 24),
 

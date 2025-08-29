@@ -1,454 +1,584 @@
-// File: lib/screens/notifications_screen.dart
-
 import 'package:flutter/material.dart';
-import '../utils/asset_manager.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../widgets/animated/animated_button.dart';
+import '../widgets/animated/animated_card.dart';
+import '../utils/animation_constants.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
-  // Sample notifications data using local assets
-  final List<Map<String, dynamic>> notificationGroups = const [
-    {
-      'header': 'Today',
-      'notifications': [
-        {
-          'avatarUrl': AssetManager.profileFemale1,
-          'username': 'Anna Fitness',
-          'content': 'liked your workout post',
-          'time': '2m ago',
-          'icon': Icons.favorite,
-          'iconColor': Colors.red,
-          'postImage': AssetManager.workoutDeadlift,
-          'type': 'like',
-        },
-        {
-          'avatarUrl': AssetManager.profileMale1,
-          'username': 'Coach Mike',
-          'content': 'commented: "Great form! Keep it up 💪"',
-          'time': '15m ago',
-          'icon': Icons.comment,
-          'iconColor': Colors.blue,
-          'postImage': AssetManager.workoutYoga,
-          'type': 'comment',
-        },
-        {
-          'avatarUrl': AssetManager.profile1,
-          'username': 'Sarah T.',
-          'content': 'started following you',
-          'time': '1h ago',
-          'icon': Icons.person_add,
-          'iconColor': Colors.green,
-          'type': 'follow',
-        },
-        {
-          'avatarUrl': AssetManager.workoutCardio,
-          'username': 'Fitness Group',
-          'content': 'You have a new message in the group',
-          'time': '2h ago',
-          'icon': Icons.group,
-          'iconColor': Colors.purple,
-          'type': 'group_message',
-        },
-      ],
-    },
-    {
-      'header': 'This Week',
-      'notifications': [
-        {
-          'avatarUrl': AssetManager.profile2,
-          'username': 'John Trainer',
-          'content': 'shared your progress post',
-          'time': '1d ago',
-          'icon': Icons.share,
-          'iconColor': Colors.orange,
-          'postImage': AssetManager.progressAfter1,
-          'type': 'share',
-        },
-        {
-          'avatarUrl': AssetManager.profileFemale1,
-          'username': 'Emma Wilson',
-          'content': 'tagged you in a photo',
-          'time': '2d ago',
-          'icon': Icons.local_offer,
-          'iconColor': Colors.indigo,
-          'postImage': AssetManager.nutritionMealprep,
-          'type': 'tag',
-        },
-        {
-          'avatarUrl': AssetManager.profileMale1,
-          'username': 'David Coach',
-          'content': 'sent you a workout plan',
-          'time': '3d ago',
-          'icon': Icons.assignment,
-          'iconColor': Colors.teal,
-          'type': 'workout_plan',
-        },
-        {
-          'avatarUrl': AssetManager.profile1,
-          'username': 'Lisa M.',
-          'content': 'liked your meal prep post',
-          'time': '4d ago',
-          'icon': Icons.favorite,
-          'iconColor': Colors.red,
-          'postImage': AssetManager.nutritionBowl,
-          'type': 'like',
-        },
-      ],
-    },
-    {
-      'header': 'Earlier',
-      'notifications': [
-        {
-          'avatarUrl': AssetManager.profileMale1,
-          'username': 'Fitness App',
-          'content': 'Your workout streak is now 15 days! 🔥',
-          'time': '1w ago',
-          'icon': Icons.emoji_events,
-          'iconColor': Colors.amber,
-          'type': 'achievement',
-        },
-        {
-          'avatarUrl': AssetManager.profile2,
-          'username': 'Tom Fitness',
-          'content': 'invited you to join "Morning Runners" group',
-          'time': '1w ago',
-          'icon': Icons.group_add,
-          'iconColor': Colors.blue,
-          'type': 'group_invite',
-        },
-      ],
-    },
-  ];
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen>
+    with TickerProviderStateMixin {
+  
+  // Mock notifications data grouped by time
+  final Map<String, List<Map<String, dynamic>>> _notifications = {
+    'Today': [
+      {
+        'id': '1',
+        'type': 'like',
+        'user': 'Anna Chen',
+        'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b612b647?w=150&h=150&fit=crop&crop=face',
+        'message': 'liked your meditation post',
+        'time': '2h ago',
+        'isRead': false,
+        'postImage': 'https://images.unsplash.com/photo-1635545999375-057ee4013deb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+      },
+      {
+        'id': '2',
+        'type': 'comment',
+        'user': 'Marcus Johnson',
+        'avatar': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+        'message': 'commented: "This is so inspiring! Thank you for sharing 🙏"',
+        'time': '4h ago',
+        'isRead': false,
+        'postImage': 'https://images.unsplash.com/photo-1701416050721-2e8a9f765ac2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+      },
+      {
+        'id': '3',
+        'type': 'follow',
+        'user': 'Sarah Williams',
+        'avatar': 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+        'message': 'started following you',
+        'time': '6h ago',
+        'isRead': true,
+        'postImage': null,
+      },
+      {
+        'id': '4',
+        'type': 'wellness_tip',
+        'user': null,
+        'avatar': null,
+        'message': 'New wellness tip available: "5-minute morning mindfulness routine"',
+        'time': '8h ago',
+        'isRead': false,
+        'postImage': null,
+        'icon': LucideIcons.lightbulb,
+        'iconColor': Color(0xFF3AAFA9),
+      },
+    ],
+    'This Week': [
+      {
+        'id': '5',
+        'type': 'like',
+        'user': 'Dr. Alex Park',
+        'avatar': 'https://images.unsplash.com/photo-1559209172-d0d45d8d1ce8?w=150&h=150&fit=crop&crop=face',
+        'message': 'liked your yoga journey post',
+        'time': '2d ago',
+        'isRead': true,
+        'postImage': 'https://images.unsplash.com/photo-1613637069737-2cce919a4ab7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+      },
+      {
+        'id': '6',
+        'type': 'achievement',
+        'user': null,
+        'avatar': null,
+        'message': 'Congratulations! You\'ve completed your 30-day meditation streak 🎉',
+        'time': '3d ago',
+        'isRead': true,
+        'postImage': null,
+        'icon': LucideIcons.award,
+        'iconColor': Color(0xFF7E6BF2),
+      },
+      {
+        'id': '7',
+        'type': 'follow',
+        'user': 'Luna Rodriguez',
+        'avatar': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+        'message': 'started following you',
+        'time': '4d ago',
+        'isRead': true,
+        'postImage': null,
+      },
+      {
+        'id': '8',
+        'type': 'reminder',
+        'user': null,
+        'avatar': null,
+        'message': 'Time for your daily mindfulness session',
+        'time': '5d ago',
+        'isRead': true,
+        'postImage': null,
+        'icon': LucideIcons.clock,
+        'iconColor': Color(0xFFFF9800),
+      },
+    ],
+    'Earlier': [
+      {
+        'id': '9',
+        'type': 'like',
+        'user': 'Emma Wellness',
+        'avatar': 'https://images.unsplash.com/photo-1494790108755-2616b612b647?w=150&h=150&fit=crop&crop=face',
+        'message': 'liked your nutrition tips post',
+        'time': '1w ago',
+        'isRead': true,
+        'postImage': 'https://images.unsplash.com/photo-1601921386176-d6b3206b6ace?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+      },
+      {
+        'id': '10',
+        'type': 'comment',
+        'user': 'David Kim',
+        'avatar': 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+        'message': 'commented: "Your transformation story is incredible!"',
+        'time': '1w ago',
+        'isRead': true,
+        'postImage': 'https://images.unsplash.com/photo-1635545999375-057ee4013deb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=100',
+      },
+      {
+        'id': '11',
+        'type': 'wellness_milestone',
+        'user': null,
+        'avatar': null,
+        'message': 'You\'ve helped 10 friends start their wellness journey! 🌟',
+        'time': '2w ago',
+        'isRead': true,
+        'postImage': null,
+        'icon': LucideIcons.users,
+        'iconColor': Color(0xFF4CAF50),
+      },
+    ],
+  };
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Notifications',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.mark_email_read),
-            onPressed: () => _markAllAsRead(context),
-            tooltip: 'Mark all as read',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => _openNotificationSettings(context),
-            tooltip: 'Notification settings',
-          ),
-        ],
-        elevation: 1,
-      ),
-      body: _buildNotificationsList(),
-    );
-  }
-
-  Widget _buildNotificationsList() {
-    // Check if there are any notifications
-    final hasNotifications = notificationGroups.any(
-      (group) => (group['notifications'] as List).isNotEmpty,
-    );
-
-    if (!hasNotifications) {
-      return _buildEmptyState();
-    }
-
-    return RefreshIndicator(
-      onRefresh: () async {
-        // Refresh notifications logic
-        await Future.delayed(const Duration(seconds: 1));
-      },
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: notificationGroups.length,
-        itemBuilder: (context, groupIndex) {
-          final group = notificationGroups[groupIndex];
-          final notifications = group['notifications'] as List;
-
-          if (notifications.isEmpty) return const SizedBox.shrink();
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Group Header
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Text(
-                  group['header']!,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-
-              // Notifications in this group
-              ...notifications
-                  .map((notification) => _buildNotificationItem(notification))
-                  .toList(),
-
-              const SizedBox(height: 8),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildNotificationItem(Map<String, dynamic> notification) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      decoration: BoxDecoration(
-        color: notification['isRead'] == true
-            ? Colors.transparent
-            : Colors.blue[50],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading: Stack(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
           children: [
-            CircleAvatar(
-              backgroundImage: AssetImage(notification['avatarUrl']!),
-              radius: 24,
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  AnimatedWellnessButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    backgroundColor: Colors.transparent,
+                    padding: const EdgeInsets.all(8),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Icon(
+                      LucideIcons.arrowLeft,
+                      size: 20,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Notifications',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  AnimatedWellnessButton(
+                    onPressed: _markAllAsRead,
+                    backgroundColor: Colors.transparent,
+                    padding: const EdgeInsets.all(8),
+                    borderRadius: BorderRadius.circular(20),
+                    child: Text(
+                      'Mark all read',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Positioned(
-              bottom: -2,
-              right: -2,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: notification['iconColor'],
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: Icon(
-                  notification['icon'],
-                  color: Colors.white,
-                  size: 12,
-                ),
+
+            // Notifications List
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _notifications.keys.length,
+                itemBuilder: (context, sectionIndex) {
+                  final sectionKey = _notifications.keys.elementAt(sectionIndex);
+                  final sectionNotifications = _notifications[sectionKey]!;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section Header
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Text(
+                          sectionKey,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+
+                      // Section Notifications
+                      ...sectionNotifications.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final notification = entry.value;
+                        final globalIndex = sectionIndex * 100 + index; // Unique index for animation
+
+                        return Dismissible(
+                          key: Key(notification['id']),
+                          direction: DismissDirection.endToStart,
+                          background: _buildDismissBackground(theme),
+                          onDismissed: (direction) => _dismissNotification(notification),
+                          child: _buildNotificationItem(notification, globalIndex),
+                        );
+                      }).toList(),
+
+                      if (sectionIndex < _notifications.keys.length - 1)
+                        const SizedBox(height: 8),
+                    ],
+                  );
+                },
               ),
             ),
           ],
         ),
-        title: RichText(
-          text: TextSpan(
-            style: const TextStyle(color: Colors.black87, fontSize: 14),
-            children: [
-              TextSpan(
-                text: notification['username']!,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              TextSpan(text: ' ${notification['content']!}'),
-            ],
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Text(
-            notification['time']!,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ),
-        trailing: _buildNotificationTrailing(notification),
-        onTap: () => _onNotificationTap(notification),
       ),
     );
   }
 
-  Widget? _buildNotificationTrailing(Map<String, dynamic> notification) {
-    // Show post thumbnail for certain notification types
-    if (notification['postImage'] != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          notification['postImage']!,
-          width: 50,
-          height: 50,
-          fit: BoxFit.cover,
+  Widget _buildNotificationItem(Map<String, dynamic> notification, int index) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isRead = notification['isRead'] as bool;
+
+    return AnimatedWellnessCard(
+      animationDelay: index * 80,
+      onTap: () => _handleNotificationTap(notification),
+      margin: const EdgeInsets.only(bottom: 8),
+      backgroundColor: isRead
+          ? colorScheme.surface
+          : colorScheme.primary.withValues(alpha: 0.05),
+      child: Row(
+        children: [
+          // Avatar or Icon
+          _buildNotificationAvatar(notification, theme),
+          
+          const SizedBox(width: 12),
+
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildNotificationText(notification, colorScheme),
+                const SizedBox(height: 4),
+                Text(
+                  notification['time'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Post Image or Action
+          _buildNotificationAction(notification, theme),
+
+          // Unread Indicator
+          if (!isRead)
+            Container(
+              width: 8,
+              height: 8,
+              margin: const EdgeInsets.only(left: 12),
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationAvatar(Map<String, dynamic> notification, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+
+    if (notification['avatar'] != null) {
+      // User avatar
+      return Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: CircleAvatar(
+          radius: 21,
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          backgroundImage: CachedNetworkImageProvider(notification['avatar']),
+        ),
+      );
+    } else if (notification['icon'] != null) {
+      // System notification icon
+      return Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: notification['iconColor'].withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          notification['icon'],
+          color: notification['iconColor'],
+          size: 20,
+        ),
+      );
+    } else {
+      // Default ThriveSpace icon
+      return Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          LucideIcons.heart,
+          color: colorScheme.primary,
+          size: 20,
         ),
       );
     }
+  }
 
-    // Show action buttons for certain types
-    switch (notification['type']) {
-      case 'follow':
-        return SizedBox(
-          width: 80,
-          child: ElevatedButton(
-            onPressed: () => _followBack(notification),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              minimumSize: const Size(0, 32),
-            ),
-            child: const Text('Follow', style: TextStyle(fontSize: 12)),
+  Widget _buildNotificationText(Map<String, dynamic> notification, ColorScheme colorScheme) {
+    final user = notification['user'] as String?;
+    final message = notification['message'] as String;
+
+    if (user != null) {
+      // Notification with user
+      return RichText(
+        text: TextSpan(
+          style: TextStyle(
+            fontSize: 14,
+            color: colorScheme.onSurface,
+            height: 1.3,
           ),
-        );
-      case 'group_invite':
-        return Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.check, color: Colors.green, size: 20),
-              onPressed: () => _acceptInvite(notification),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            TextSpan(
+              text: user,
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.red, size: 20),
-              onPressed: () => _declineInvite(notification),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            TextSpan(
+              text: ' $message',
+              style: const TextStyle(fontWeight: FontWeight.w400),
             ),
           ],
-        );
-      default:
-        return notification['isRead'] != true
-            ? Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-              )
-            : null;
+        ),
+      );
+    } else {
+      // System notification
+      return Text(
+        message,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: colorScheme.onSurface,
+          height: 1.3,
+        ),
+      );
     }
   }
 
-  Widget _buildEmptyState() {
-    return Center(
+  Widget _buildNotificationAction(Map<String, dynamic> notification, ThemeData theme) {
+    final postImage = notification['postImage'] as String?;
+
+    if (postImage != null) {
+      // Show post thumbnail
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: CachedNetworkImage(
+          imageUrl: postImage,
+          width: 40,
+          height: 40,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            width: 40,
+            height: 40,
+            color: theme.colorScheme.surfaceContainerHighest,
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        ),
+      );
+    } else if (notification['type'] == 'follow') {
+      // Follow/Unfollow button
+      return AnimatedWellnessButton(
+        onPressed: () => _handleFollowAction(notification),
+        backgroundColor: theme.colorScheme.primary,
+        borderRadius: BorderRadius.circular(8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Text(
+          'Follow',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      );
+    } else {
+      // Right arrow for other notifications
+      return Icon(
+        LucideIcons.chevronRight,
+        size: 16,
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+      );
+    }
+  }
+
+  Widget _buildDismissBackground(ThemeData theme) {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            AssetManager.appLogo,
-            width: 80,
-            height: 80,
-            color: Colors.grey[300],
+          Icon(
+            LucideIcons.trash2,
+            color: Colors.red,
+            size: 20,
           ),
-          const SizedBox(height: 24),
-          const Icon(Icons.notifications_none, size: 80, color: Colors.grey),
-          const SizedBox(height: 16),
-          const Text(
-            "You're all caught up!",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
-            "No new notifications right now.\nKeep sharing your fitness journey!",
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-            textAlign: TextAlign.center,
+            'Delete',
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _onNotificationTap(Map<String, dynamic> notification) {
+  void _handleNotificationTap(Map<String, dynamic> notification) {
+    // Mark as read
+    setState(() {
+      notification['isRead'] = true;
+    });
+
     // Handle different notification types
-    switch (notification['type']) {
+    final type = notification['type'] as String;
+    switch (type) {
       case 'like':
       case 'comment':
-      case 'share':
-      case 'tag':
-        // Navigate to post detail
         _navigateToPost(notification);
         break;
       case 'follow':
-        // Navigate to user profile
         _navigateToProfile(notification);
         break;
-      case 'group_message':
-      case 'group_invite':
-        // Navigate to group
-        _navigateToGroup(notification);
-        break;
-      case 'workout_plan':
-        // Navigate to workout plan
-        _navigateToWorkoutPlan(notification);
-        break;
+      case 'wellness_tip':
       case 'achievement':
-        // Show achievement detail
-        _showAchievementDetail(notification);
+      case 'reminder':
+      case 'wellness_milestone':
+        _handleSystemNotification(notification);
         break;
     }
   }
 
   void _navigateToPost(Map<String, dynamic> notification) {
-    // Navigate to post detail screen
-    print('Navigate to post: ${notification['postImage']}');
-  }
-
-  void _navigateToProfile(Map<String, dynamic> notification) {
-    // Navigate to user profile screen
-    print('Navigate to profile: ${notification['username']}');
-  }
-
-  void _navigateToGroup(Map<String, dynamic> notification) {
-    // Navigate to group screen
-    print('Navigate to group: ${notification['username']}');
-  }
-
-  void _navigateToWorkoutPlan(Map<String, dynamic> notification) {
-    // Navigate to workout plan screen
-    print('Navigate to workout plan from: ${notification['username']}');
-  }
-
-  void _showAchievementDetail(Map<String, dynamic> notification) {
-    // Show achievement dialog or screen
-    print('Show achievement: ${notification['content']}');
-  }
-
-  void _followBack(Map<String, dynamic> notification) {
-    // Implement follow back logic
-    print('Follow back: ${notification['username']}');
-  }
-
-  void _acceptInvite(Map<String, dynamic> notification) {
-    // Implement accept invite logic
-    print('Accept invite from: ${notification['username']}');
-  }
-
-  void _declineInvite(Map<String, dynamic> notification) {
-    // Implement decline invite logic
-    print('Decline invite from: ${notification['username']}');
-  }
-
-  void _markAllAsRead(BuildContext context) {
-    // Implement mark all as read logic
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('All notifications marked as read'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text('Navigating to post...'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  void _openNotificationSettings(BuildContext context) {
-    // Navigate to notification settings
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Notification Settings'),
-        content: const Text('Notification settings will be available soon.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
+  void _navigateToProfile(Map<String, dynamic> notification) {
+    final user = notification['user'] as String;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Navigating to $user\'s profile...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _handleSystemNotification(Map<String, dynamic> notification) {
+    final type = notification['type'] as String;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Opening ${type.replaceAll('_', ' ')}...'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _handleFollowAction(Map<String, dynamic> notification) {
+    final user = notification['user'] as String;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Following $user'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _dismissNotification(Map<String, dynamic> notification) {
+    // Find and remove the notification from the appropriate section
+    for (final section in _notifications.values) {
+      section.removeWhere((item) => item['id'] == notification['id']);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Notification deleted'),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            // Could implement undo functionality here
+          },
+        ),
+      ),
+    );
+  }
+
+  void _markAllAsRead() {
+    setState(() {
+      for (final section in _notifications.values) {
+        for (final notification in section) {
+          notification['isRead'] = true;
+        }
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('All notifications marked as read'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
